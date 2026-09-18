@@ -13,11 +13,11 @@
           "cantidad": "100",
           "unidad": "m3",
           "observaciones": "-",
-          "infoSolicitada": "-",
+          "infoSolicitada": "Req. Gerencia: dónde?",
           "fechaSolicitud": "2026-09-18",
           "fechaAprobacion": "-",
           "fechaOC": "-",
-          "estado": "PENDIENTE",
+          "estado": "INFO_REQUERIDA",
           "oc": "-"
         }
       ],
