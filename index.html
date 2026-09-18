@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión SEGMA - Sincronizado con GitHub</title>
+    <title>Gestión SEGMA - Flujo de Trabajo</title>
     <style>
-        :root { --primary: #1e3a8a; --secondary: #0284c7; --success: #16a34a; --danger: #dc2626; --bg: #f8fafc; --text: #1e293b; }
+        :root { --primary: #1e3a8a; --secondary: #0284c7; --success: #16a34a; --danger: #dc2626; --warning: #d97706; --info: #8b5cf6; --bg: #f8fafc; --text: #1e293b; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; margin: 0; }
         header { background-color: var(--primary); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         header h1 { margin: 0; font-size: 1.4rem; }
@@ -15,7 +15,7 @@
         .btn-token { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
         .btn-token:hover { background: rgba(255,255,255,0.3); }
 
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn { padding: 10px 15px; border: none; background: #e2e8f0; cursor: pointer; border-radius: 6px; font-weight: bold; }
         .tab-btn.active { background: var(--secondary); color: white; }
         .tab-content { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -23,25 +23,35 @@
 
         form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
         .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: 1 / -1; }
         label { font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
-        input, select, button { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+        input, select, button, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; }
         button.btn-primary { background: var(--secondary); color: white; border: none; font-weight: bold; cursor: pointer; grid-column: 1 / -1; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 0.85rem; }
         th { background-color: #f1f5f9; }
 
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
         .badge-pending { background: #fef3c7; color: #92400e; }
         .badge-approved { background: #dcfce7; color: #166534; }
         .badge-rejected { background: #fee2e2; color: #991b1b; }
+        .badge-oc { background: #e0f2fe; color: #0369a1; }
+        .badge-info { background: #f3e8ff; color: #6b21a8; }
 
-        .btn-action { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; color: white; margin-right: 4px; }
+        .btn-action { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.78rem; color: white; margin-right: 4px; margin-bottom: 2px; }
         .btn-approve { background-color: var(--success); }
         .btn-reject { background-color: var(--danger); }
+        .btn-oc { background-color: var(--warning); }
+        .btn-delete { background-color: var(--danger); }
+        .btn-info-req { background-color: var(--info); }
+        .btn-resend { background-color: var(--secondary); }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-card { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 420px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        .obs-box { font-size: 0.8rem; color: #475569; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border-left: 3px solid var(--secondary); margin-top: 4px; }
+        .info-box { font-size: 0.8rem; color: #6b21a8; background: #f3e8ff; padding: 4px 8px; border-radius: 4px; border-left: 3px solid var(--info); margin-top: 4px; }
 
         #debug-panel { margin-top: 15px; padding: 10px; background: #1e293b; color: #38bdf8; font-family: monospace; font-size: 0.8rem; border-radius: 6px; display: none; }
     </style>
@@ -52,7 +62,7 @@
     <div id="modal-token" class="modal-overlay" style="display: none;">
         <div class="modal-card">
             <h3>Configurar Token de GitHub</h3>
-            <p style="font-size: 0.85rem; color: #64748b;">Ingresa tu Personal Access Token (PAT) con permisos de <b>repo</b> para guardar información.</p>
+            <p style="font-size: 0.85rem; color: #64748b;">Ingresa tu Personal Access Token (PAT) con permisos de <b>repo</b>.</p>
             <div class="form-group" style="margin-bottom: 15px;">
                 <label for="input-token">Token (ghp_...)</label>
                 <input type="password" id="input-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
@@ -64,7 +74,7 @@
     <header>
         <div>
             <h1>Proyecto: Edificio SEGMA</h1>
-            <p>Almacenamiento directo en GitHub API (JSON Database)</p>
+            <p>Flujo de Trabajo: Terreno ➔ Aprobación ➔ Generación OC</p>
         </div>
         <div class="header-actions">
             <button class="btn-token" type="button" onclick="pedirNuevoToken()">🔑 Token</button>
@@ -74,15 +84,39 @@
         </div>
     </header>
 
+    <!-- NAVEGACIÓN POR PESTAÑAS -->
     <div class="tabs">
-        <button class="tab-btn active" type="button" onclick="cambiarTab('admin')">1. Admin Terreno</button>
-        <button class="tab-btn" type="button" onclick="cambiarTab('gerencia')">2. Gerencia Aprobaciones</button>
-        <button class="tab-btn" type="button" onclick="cambiarTab('dashboard')">3. Dashboard General</button>
+        <button class="tab-btn active" type="button" onclick="cambiarTab('dashboard')">Dashboard Resumen</button>
+        <button class="tab-btn" type="button" onclick="cambiarTab('terreno')">1. Terreno</button>
+        <button class="tab-btn" type="button" onclick="cambiarTab('aprobacion')">2. Aprobación</button>
+        <button class="tab-btn" type="button" onclick="cambiarTab('oc')">3. Generación OC</button>
     </div>
 
-    <!-- TAB 1: ADMIN -->
-    <div id="tab-admin" class="tab-content active">
-        <h2>Cargar Requerimiento de Terreno</h2>
+    <!-- PESTAÑA PRIMARIA: DASHBOARD GENERAL -->
+    <div id="tab-dashboard" class="tab-content active">
+        <h2>Dashboard Consolidado de Estado</h2>
+        <table id="tabla-dashboard">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tarea</th>
+                    <th>Requerimiento</th>
+                    <th>Cant. / Uni.</th>
+                    <th>Observaciones / Info Requerida</th>
+                    <th>F. Solicitud</th>
+                    <th>F. Aprobación</th>
+                    <th>F. Generación OC</th>
+                    <th>N° OC / Pase</th>
+                    <th>Estado General</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- PASO 1: TERRENO -->
+    <div id="tab-terreno" class="tab-content">
+        <h2>1. Ingreso de Requerimiento de Terreno</h2>
         <form id="form-tarea">
             <div class="form-group">
                 <label>Nombre de Tarea en Terreno</label>
@@ -90,7 +124,7 @@
             </div>
             <div class="form-group">
                 <label>Fecha Inicio Tarea</label>
-                <input type="date" id="tarea-fecha" required onchange="calcularFechaSuministro()">
+                <input type="date" id="tarea-fecha" required>
             </div>
             <div class="form-group">
                 <label>Tipo de Requerimiento</label>
@@ -101,40 +135,59 @@
             </div>
             <div class="form-group">
                 <label>Descripción Requerimiento</label>
-                <input type="text" id="suministro-nombre" placeholder="Ej: Hormigón H30 o 6 trabajadores" required>
+                <input type="text" id="suministro-nombre" placeholder="Ej: Hormigón H30" required>
             </div>
             <div class="form-group">
-                <label>Fecha Límite Solicitud (-14 días)</label>
-                <input type="date" id="suministro-fecha" readonly style="background-color: #e2e8f0;">
+                <label>Cantidad</label>
+                <input type="number" id="suministro-cantidad" step="any" placeholder="Ej: 15" required>
             </div>
-            <button type="submit" class="btn-primary">Guardar en GitHub</button>
+            <div class="form-group">
+                <label>Unidad (Uni)</label>
+                <input type="text" id="suministro-unidad" placeholder="Ej: m3, global, pers." required>
+            </div>
+            <div class="form-group">
+                <label>Fecha Efectiva Solicitud</label>
+                <input type="date" id="suministro-fecha" required>
+            </div>
+            <div class="form-group full-width">
+                <label>Observaciones / Fundamentación</label>
+                <textarea id="suministro-observaciones" rows="2" placeholder="Ej: Se requiere con aditivo acelerante por clima frío para avanzar según carta gantt."></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Enviar Solicitud desde Terreno</button>
         </form>
 
-        <h3>Solicitudes Registradas</h3>
-        <table id="tabla-admin">
+        <h3>Solicitudes Cargadas por Terreno</h3>
+        <table id="tabla-terreno">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Tarea</th>
                     <th>Inicio Tarea</th>
                     <th>Requerimiento</th>
-                    <th>Fecha Solicitud (-14d)</th>
+                    <th>Cant.</th>
+                    <th>Uni.</th>
+                    <th>Observaciones / Requerimientos de Info</th>
+                    <th>Fecha Solicitud</th>
                     <th>Estado</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
 
-    <!-- TAB 2: GERENCIA -->
-    <div id="tab-gerencia" class="tab-content">
-        <h2>Aprobación de Requerimientos (Gerencia)</h2>
-        <table id="tabla-gerencia">
+    <!-- PASO 2: APROBACIÓN -->
+    <div id="tab-aprobacion" class="tab-content">
+        <h2>2. Aprobación (Gerencia)</h2>
+        <table id="tabla-aprobacion">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Tarea</th>
                     <th>Requerimiento</th>
+                    <th>Cant.</th>
+                    <th>Uni.</th>
+                    <th>Observaciones / Info Requerida</th>
                     <th>Fecha Solicitud</th>
                     <th>Fecha Aprobación</th>
                     <th>Estado</th>
@@ -145,20 +198,21 @@
         </table>
     </div>
 
-    <!-- TAB 3: DASHBOARD -->
-    <div id="tab-dashboard" class="tab-content">
-        <h2>Dashboard Consolidado</h2>
-        <table id="tabla-dashboard">
+    <!-- PASO 3: GENERACIÓN OC -->
+    <div id="tab-oc" class="tab-content">
+        <h2>3. Generación de Orden de Compra (Adquisiciones)</h2>
+        <table id="tabla-oc">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Tarea</th>
                     <th>Requerimiento</th>
-                    <th>F. Solicitud</th>
-                    <th>F. Aprobación</th>
-                    <th>F. Generación OC</th>
-                    <th>N° OC</th>
-                    <th>Estado</th>
+                    <th>Cant. / Uni.</th>
+                    <th>Observaciones / Info Requerida</th>
+                    <th>Fecha Aprobación</th>
+                    <th>Fecha Generación OC</th>
+                    <th>Número OC / Pase</th>
+                    <th>Acción</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -187,17 +241,13 @@
 
             document.getElementById(`tab-${tabName}`).classList.add('active');
             
-            const btnIndex = tabName === 'admin' ? 0 : tabName === 'gerencia' ? 1 : 2;
-            document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
+            const mapping = { 'dashboard': 0, 'terreno': 1, 'aprobacion': 2, 'oc': 3 };
+            document.querySelectorAll('.tab-btn')[mapping[tabName]].classList.add('active');
         }
 
-        function calcularFechaSuministro() {
-            const val = document.getElementById('tarea-fecha').value;
-            if (val) {
-                const fecha = new Date(val);
-                fecha.setDate(fecha.getDate() - 14);
-                document.getElementById('suministro-fecha').value = fecha.toISOString().split('T')[0];
-            }
+        function establecerFechaActual() {
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('suministro-fecha').value = hoy;
         }
 
         function pedirNuevoToken() {
@@ -231,9 +281,7 @@
                     headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
                 });
 
-                if (!res.ok) {
-                    throw new Error(`Error ${res.status}: No se pudo leer el archivo solicitudes.json`);
-                }
+                if (!res.ok) throw new Error(`Error ${res.status}: No se pudo leer solicitudes.json`);
 
                 const data = await res.json();
                 fileSHA = data.sha;
@@ -274,9 +322,7 @@
                     })
                 });
 
-                if (!res.ok) {
-                    throw new Error(`Error ${res.status} al guardar en GitHub.`);
-                }
+                if (!res.ok) throw new Error(`Error ${res.status} al guardar en GitHub.`);
 
                 const data = await res.json();
                 fileSHA = data.content.sha;
@@ -291,6 +337,7 @@
             }
         }
 
+        // Paso 1: Agregar en Terreno
         document.getElementById('form-tarea').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -301,82 +348,199 @@
                 requerimientos: [{
                     tipo: document.getElementById('suministro-tipo').value,
                     descripcion: document.getElementById('suministro-nombre').value,
+                    cantidad: document.getElementById('suministro-cantidad').value || "-",
+                    unidad: document.getElementById('suministro-unidad').value || "-",
+                    observaciones: document.getElementById('suministro-observaciones').value || "-",
+                    infoSolicitada: "-",
                     fechaSolicitud: document.getElementById('suministro-fecha').value,
                     fechaAprobacion: "-",
                     fechaOC: "-",
                     estado: "PENDIENTE",
                     oc: "-"
                 }],
-                registradoPor: "Administrador de Proyecto"
+                registradoPor: "Administrador de Terreno"
             };
 
             if (!datosDB.solicitudes) datosDB.solicitudes = [];
             datosDB.solicitudes.push(nuevaSol);
             
-            await guardarEnGitHub(`Agregar tarea: ${nuevaSol.tarea}`);
+            await guardarEnGitHub(`Paso 1: Nueva solicitud en terreno (${nuevaSol.tarea})`);
             this.reset();
+            establecerFechaActual();
         });
 
-        async function cambiarEstado(solicitudId, reqIdx, nuevoEstado) {
+        // Paso 1: Eliminar fila en Terreno
+        async function eliminarSolicitud(solicitudId) {
+            if (confirm(`¿Estás seguro de que deseas eliminar la solicitud #${solicitudId}?`)) {
+                datosDB.solicitudes = datosDB.solicitudes.filter(s => s.id !== solicitudId);
+                await guardarEnGitHub(`Paso 1: Se eliminó la solicitud #${solicitudId}`);
+            }
+        }
+
+        // Paso 1: Reenviar solicitud tras aportar más información
+        async function reenviarSolicitud(solicitudId, reqIdx) {
+            const sol = datosDB.solicitudes.find(s => s.id === solicitudId);
+            if (sol && sol.requerimientos[reqIdx]) {
+                const nuevaInfo = prompt("Aporta los nuevos datos requeridos para actualizar la solicitud:");
+                if (nuevaInfo && nuevaInfo.trim() !== "") {
+                    const req = sol.requerimientos[reqIdx];
+                    req.observaciones = (req.observaciones !== "-" ? req.observaciones + " | " : "") + "Info agregada: " + nuevaInfo.trim();
+                    
+                    if (req.fechaAprobacion && req.fechaAprobacion !== "-") {
+                        req.estado = 'APROBADO';
+                    } else {
+                        req.estado = 'PENDIENTE';
+                    }
+                    
+                    await guardarEnGitHub(`Paso 1: Solicitud #${solicitudId} reenviada con nueva info`);
+                }
+            }
+        }
+
+        // Paso 2: Aprobación Gerencia / Solicitud de Información
+        async function cambiarEstadoAprobacion(solicitudId, reqIdx, nuevoEstado) {
             const sol = datosDB.solicitudes.find(s => s.id === solicitudId);
             if (sol && sol.requerimientos[reqIdx]) {
                 const hoy = new Date().toISOString().split('T')[0];
-                sol.requerimientos[reqIdx].estado = nuevoEstado;
+                const req = sol.requerimientos[reqIdx];
+
+                if (nuevoEstado === 'INFO_REQUERIDA') {
+                    const detalleInfo = prompt("Describe detalladamente qué información o antecedentes necesitas para aprobar:");
+                    if (!detalleInfo || detalleInfo.trim() === "") return;
+                    
+                    req.estado = 'INFO_REQUERIDA';
+                    req.infoSolicitada = "Req. Gerencia: " + detalleInfo.trim();
+                    await guardarEnGitHub(`Paso 2: Información solicitada por Gerencia para #${solicitudId}`);
+                    return;
+                }
+
+                req.estado = nuevoEstado;
+                req.fechaAprobacion = hoy;
                 
-                if (nuevoEstado === 'APROBADO') {
-                    sol.requerimientos[reqIdx].fechaAprobacion = hoy;
-                    sol.requerimientos[reqIdx].fechaOC = hoy;
-                    sol.requerimientos[reqIdx].oc = `OC-SEGMA-${Math.floor(1000 + Math.random() * 9000)}`;
-                } else {
-                    sol.requerimientos[reqIdx].fechaAprobacion = hoy;
-                    sol.requerimientos[reqIdx].fechaOC = "-";
-                    sol.requerimientos[reqIdx].oc = "-";
+                if (nuevoEstado === 'RECHAZADO') {
+                    req.fechaOC = "-";
+                    req.oc = "-";
                 }
                 
-                await guardarEnGitHub(`Cambio estado a ${nuevoEstado} en solicitud #${solicitudId}`);
+                await guardarEnGitHub(`Paso 2: Solicitud #${solicitudId} ${nuevoEstado}`);
+            }
+        }
+
+        // Paso 3: Generación OC Manual / Solicitud de Información por Adquisiciones
+        async function generarOCManual(solicitudId, reqIdx) {
+            const sol = datosDB.solicitudes.find(s => s.id === solicitudId);
+            if (sol && sol.requerimientos[reqIdx]) {
+                const numeroOC = prompt("Ingresa el número de Orden de Compra o Pase (Ej: OC-10522):");
+                
+                if (numeroOC && numeroOC.trim() !== "") {
+                    const hoy = new Date().toISOString().split('T')[0];
+                    sol.requerimientos[reqIdx].estado = 'OC GENERADA';
+                    sol.requerimientos[reqIdx].fechaOC = hoy;
+                    sol.requerimientos[reqIdx].oc = numeroOC.trim();
+                    
+                    await guardarEnGitHub(`Paso 3: OC ${numeroOC.trim()} ingresada para solicitud #${solicitudId}`);
+                }
+            }
+        }
+
+        async function pedirInfoOC(solicitudId, reqIdx) {
+            const sol = datosDB.solicitudes.find(s => s.id === solicitudId);
+            if (sol && sol.requerimientos[reqIdx]) {
+                const detalleInfo = prompt("Describe la información o cotización adicional necesaria para emitir la OC:");
+                if (detalleInfo && detalleInfo.trim() !== "") {
+                    const req = sol.requerimientos[reqIdx];
+                    req.estado = 'INFO_REQUERIDA';
+                    req.infoSolicitada = "Req. Adquisiciones: " + detalleInfo.trim();
+                    
+                    await guardarEnGitHub(`Paso 3: Información solicitada por Adquisiciones para #${solicitudId}`);
+                }
             }
         }
 
         function renderTables() {
             const getBadge = (e) => {
-                if (e === 'PENDIENTE') return `<span class="badge badge-pending">Pendiente</span>`;
-                if (e === 'APROBADO') return `<span class="badge badge-approved">Aprobado</span>`;
+                if (e === 'PENDIENTE') return `<span class="badge badge-pending">Pendiente Aprobación</span>`;
+                if (e === 'APROBADO') return `<span class="badge badge-approved">Aprobado (Paso 2)</span>`;
+                if (e === 'OC GENERADA') return `<span class="badge badge-oc">OC Generada (Paso 3)</span>`;
+                if (e === 'INFO_REQUERIDA') return `<span class="badge badge-info">Info Requerida</span>`;
                 return `<span class="badge badge-rejected">${e}</span>`;
             };
 
-            let htmlAdmin = "", htmlGerencia = "", htmlDashboard = "";
+            let htmlTerreno = "", htmlAprobacion = "", htmlOC = "", htmlDashboard = "";
 
             if (datosDB && datosDB.solicitudes) {
                 datosDB.solicitudes.forEach(s => {
                     s.requerimientos.forEach((r, idx) => {
-                        htmlAdmin += `<tr>
+                        const cant = r.cantidad || '-';
+                        const uni = r.unidad || '-';
+                        const obs = r.observaciones || '-';
+                        const infoReq = r.infoSolicitada && r.infoSolicitada !== '-' ? `<div class="info-box"><b>⚠️ Requerido:</b> ${r.infoSolicitada}</div>` : '';
+                        const obsBox = obs !== '-' ? `<div class="obs-box"><b>Obs:</b> ${obs}</div>` : '';
+
+                        // 1. Terreno
+                        htmlTerreno += `<tr>
                             <td>#${s.id}</td>
                             <td><b>${s.tarea}</b></td>
                             <td>${s.fechaInicio}</td>
                             <td>[${r.tipo}] ${r.descripcion}</td>
-                            <td><b style="color:var(--danger);">${r.fechaSolicitud}</b></td>
+                            <td>${cant}</td>
+                            <td>${uni}</td>
+                            <td>${obsBox} ${infoReq}</td>
+                            <td><b>${r.fechaSolicitud}</b></td>
                             <td>${getBadge(r.estado)}</td>
+                            <td>
+                                ${r.estado === 'INFO_REQUERIDA' ? `
+                                    <button type="button" class="btn-action btn-resend" onclick="reenviarSolicitud(${s.id},${idx})">Aportar Info / Reenviar</button>
+                                ` : ''}
+                                <button type="button" class="btn-action btn-delete" onclick="eliminarSolicitud(${s.id})">Eliminar</button>
+                            </td>
                         </tr>`;
 
-                        htmlGerencia += `<tr>
+                        // 2. Aprobación
+                        htmlAprobacion += `<tr>
                             <td>#${s.id}</td>
                             <td><b>${s.tarea}</b></td>
                             <td>[${r.tipo}] ${r.descripcion}</td>
+                            <td>${cant}</td>
+                            <td>${uni}</td>
+                            <td>${obsBox} ${infoReq}</td>
                             <td>${r.fechaSolicitud}</td>
                             <td>${r.fechaAprobacion || '-'}</td>
                             <td>${getBadge(r.estado)}</td>
                             <td>
-                                ${r.estado === 'PENDIENTE' ? `
-                                    <button type="button" class="btn-action btn-approve" onclick="cambiarEstado(${s.id},${idx}, 'APROBADO')">Aprobar</button>
-                                    <button type="button" class="btn-action btn-reject" onclick="cambiarEstado(${s.id},${idx}, 'RECHAZADO')">Rechazar</button>
+                                ${r.estado === 'PENDIENTE' || r.estado === 'INFO_REQUERIDA' ? `
+                                    <button type="button" class="btn-action btn-approve" onclick="cambiarEstadoAprobacion(${s.id},${idx}, 'APROBADO')">Aprobar</button>
+                                    <button type="button" class="btn-action btn-info-req" onclick="cambiarEstadoAprobacion(${s.id},${idx}, 'INFO_REQUERIDA')">Pedir Info</button>
+                                    <button type="button" class="btn-action btn-reject" onclick="cambiarEstadoAprobacion(${s.id},${idx}, 'RECHAZADO')">Rechazar</button>
                                 ` : '<i>Procesado</i>'}
                             </td>
                         </tr>`;
 
+                        // 3. Generación OC
+                        htmlOC += `<tr>
+                            <td>#${s.id}</td>
+                            <td><b>${s.tarea}</b></td>
+                            <td>[${r.tipo}] ${r.descripcion}</td>
+                            <td>${cant} ${uni}</td>
+                            <td>${obsBox} ${infoReq}</td>
+                            <td>${r.fechaAprobacion || '-'}</td>
+                            <td>${r.fechaOC || '-'}</td>
+                            <td><code>${r.oc}</code></td>
+                            <td>
+                                ${r.estado === 'APROBADO' ? `
+                                    <button type="button" class="btn-action btn-oc" onclick="generarOCManual(${s.id},${idx})">Ingresar OC</button>
+                                    <button type="button" class="btn-action btn-info-req" onclick="pedirInfoOC(${s.id},${idx})">Pedir Info</button>
+                                ` : r.estado === 'OC GENERADA' ? '<i>OC Emitida</i>' : r.estado === 'INFO_REQUERIDA' ? '<i>En aclaración</i>' : '<i>Pendiente Aprobación</i>'}
+                            </td>
+                        </tr>`;
+
+                        // Dashboard Resumen
                         htmlDashboard += `<tr>
                             <td>#${s.id}</td>
                             <td><b>${s.tarea}</b></td>
                             <td>[${r.tipo}] ${r.descripcion}</td>
+                            <td>${cant} ${uni}</td>
+                            <td>${obsBox} ${infoReq}</td>
                             <td>${r.fechaSolicitud}</td>
                             <td>${r.fechaAprobacion || '-'}</td>
                             <td>${r.fechaOC || '-'}</td>
@@ -387,12 +551,16 @@
                 });
             }
 
-            document.querySelector('#tabla-admin tbody').innerHTML = htmlAdmin;
-            document.querySelector('#tabla-gerencia tbody').innerHTML = htmlGerencia;
+            document.querySelector('#tabla-terreno tbody').innerHTML = htmlTerreno;
+            document.querySelector('#tabla-aprobacion tbody').innerHTML = htmlAprobacion;
+            document.querySelector('#tabla-oc tbody').innerHTML = htmlOC;
             document.querySelector('#tabla-dashboard tbody').innerHTML = htmlDashboard;
         }
 
-        window.addEventListener('DOMContentLoaded', cargarDesdeGitHub);
+        window.addEventListener('DOMContentLoaded', () => {
+            establecerFechaActual();
+            cargarDesdeGitHub();
+        });
     </script>
 </body>
 </html>
