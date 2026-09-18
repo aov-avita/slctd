@@ -23,6 +23,23 @@
         }
       ],
       "registradoPor": "Administrador de Proyecto"
+    },
+    {
+      "id": 156,
+      "tarea": "Hgon fundaciones ",
+      "fechaInicio": "2026-09-24",
+      "requerimientos": [
+        {
+          "tipo": "Suministro",
+          "descripcion": "G20-10",
+          "fechaSolicitud": "2026-09-10",
+          "fechaAprobacion": "-",
+          "fechaOC": "-",
+          "estado": "PENDIENTE",
+          "oc": "-"
+        }
+      ],
+      "registradoPor": "Administrador de Proyecto"
     }
   ]
 }
