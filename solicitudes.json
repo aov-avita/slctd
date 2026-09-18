@@ -13,11 +13,11 @@
           "cantidad": "100",
           "unidad": "m3",
           "observaciones": "Info agregada: eje m",
-          "infoSolicitada": "Req. Gerencia: dónde?",
+          "infoSolicitada": "Req. Adquisiciones: cono?",
           "fechaSolicitud": "2026-09-18",
           "fechaAprobacion": "2026-09-18",
           "fechaOC": "-",
-          "estado": "APROBADO",
+          "estado": "INFO_REQUERIDA",
           "oc": "-"
         }
       ],
