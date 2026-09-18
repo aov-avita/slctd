@@ -12,9 +12,9 @@
           "descripcion": "G20-10",
           "fechaSolicitud": "2026-09-10",
           "fechaAprobacion": "2026-09-18",
-          "fechaOC": "-",
-          "estado": "APROBADO",
-          "oc": "-"
+          "fechaOC": "2026-09-18",
+          "estado": "OC GENERADA",
+          "oc": "1015"
         }
       ],
       "registradoPor": "Administrador de Terreno"
