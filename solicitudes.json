@@ -1,5 +1,27 @@
 {
   "proyecto": "Edificio SEGMA",
   "ultimaActualizacion": "2026-09-18",
-  "solicitudes": []
+  "solicitudes": [
+    {
+      "id": 689,
+      "tarea": "Hormigón fundaciones ",
+      "fechaInicio": "2026-09-24",
+      "requerimientos": [
+        {
+          "tipo": "Suministro",
+          "descripcion": "G20-10",
+          "cantidad": "100",
+          "unidad": "m3",
+          "observaciones": "-",
+          "infoSolicitada": "-",
+          "fechaSolicitud": "2026-09-18",
+          "fechaAprobacion": "-",
+          "fechaOC": "-",
+          "estado": "PENDIENTE",
+          "oc": "-"
+        }
+      ],
+      "registradoPor": "Administrador de Terreno"
+    }
+  ]
 }
