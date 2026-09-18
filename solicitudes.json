@@ -33,10 +33,10 @@
           "tipo": "Suministro",
           "descripcion": "G20-10",
           "fechaSolicitud": "2026-09-10",
-          "fechaAprobacion": "-",
-          "fechaOC": "-",
-          "estado": "PENDIENTE",
-          "oc": "-"
+          "fechaAprobacion": "2026-09-18",
+          "fechaOC": "2026-09-18",
+          "estado": "APROBADO",
+          "oc": "OC-SEGMA-2307"
         }
       ],
       "registradoPor": "Administrador de Proyecto"
