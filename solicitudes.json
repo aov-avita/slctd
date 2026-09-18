@@ -16,9 +16,9 @@
           "infoSolicitada": "Req. Adquisiciones: cono?",
           "fechaSolicitud": "2026-09-18",
           "fechaAprobacion": "2026-09-18",
-          "fechaOC": "-",
-          "estado": "APROBADO",
-          "oc": "-"
+          "fechaOC": "2026-09-18",
+          "estado": "OC GENERADA",
+          "oc": "1005"
         }
       ],
       "registradoPor": "Administrador de Terreno"
