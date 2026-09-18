@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión SEGMA - Sincronizado con GitHub</title>
+    <style>
+        :root { --primary: #1e3a8a; --secondary: #0284c7; --success: #16a34a; --danger: #dc2626; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; margin: 0; }
+        header { background-color: var(--primary); color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 1.4rem; }
+        header p { margin: 5px 0 0 0; opacity: 0.8; font-size: 0.85rem; }
+        
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        .btn-token { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .btn-token:hover { background: rgba(255,255,255,0.3); }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 15px; border: none; background: #e2e8f0; cursor: pointer; border-radius: 6px; font-weight: bold; }
+        .tab-btn.active { background: var(--secondary); color: white; }
+        .tab-content { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .tab-content.active { display: block; }
+
+        form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
+        input, select, button { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+        button.btn-primary { background: var(--secondary); color: white; border: none; font-weight: bold; cursor: pointer; grid-column: 1 / -1; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 0.85rem; }
+        th { background-color: #f1f5f9; }
+
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-approved { background: #dcfce7; color: #166534; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+
+        .btn-action { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; color: white; margin-right: 4px; }
+        .btn-approve { background-color: var(--success); }
+        .btn-reject { background-color: var(--danger); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-card { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 420px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        #debug-panel { margin-top: 15px; padding: 10px; background: #1e293b; color: #38bdf8; font-family: monospace; font-size: 0.8rem; border-radius: 6px; display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- MODAL TOKEN -->
+    <div id="modal-token" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <h3>Configurar Token de GitHub</h3>
+            <p style="font-size: 0.85rem; color: #64748b;">Ingresa tu Personal Access Token (PAT) con permisos de <b>repo</b> para guardar información.</p>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="input-token">Token (ghp_...)</label>
+                <input type="password" id="input-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+            </div>
+            <button class="btn-primary" type="button" onclick="guardarToken()">Guardar y Conectar</button>
+        </div>
+    </div>
+
+    <header>
+        <div>
+            <h1>Proyecto: Edificio SEGMA</h1>
+            <p>Almacenamiento directo en GitHub API (JSON Database)</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-token" type="button" onclick="pedirNuevoToken()">🔑 Token</button>
+            <div id="status-sync" style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 15px; font-size: 0.85rem;">
+                Comprobando...
+            </div>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" type="button" onclick="cambiarTab('admin')">1. Admin Terreno</button>
+        <button class="tab-btn" type="button" onclick="cambiarTab('gerencia')">2. Gerencia Aprobaciones</button>
+        <button class="tab-btn" type="button" onclick="cambiarTab('dashboard')">3. Dashboard General</button>
+    </div>
+
+    <!-- TAB 1: ADMIN -->
+    <div id="tab-admin" class="tab-content active">
+        <h2>Cargar Requerimiento de Terreno</h2>
+        <form id="form-tarea">
+            <div class="form-group">
+                <label>Nombre de Tarea en Terreno</label>
+                <input type="text" id="tarea-nombre" placeholder="Ej: Hormigón de fundaciones zona 1" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha Inicio Tarea</label>
+                <input type="date" id="tarea-fecha" required onchange="calcularFechaSuministro()">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Requerimiento</label>
+                <select id="suministro-tipo">
+                    <option value="Suministro">Suministro / Material</option>
+                    <option value="Personal">Ingreso de Personal</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Descripción Requerimiento</label>
+                <input type="text" id="suministro-nombre" placeholder="Ej: Hormigón H30 o 6 trabajadores" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha Límite Solicitud (-14 días)</label>
+                <input type="date" id="suministro-fecha" readonly style="background-color: #e2e8f0;">
+            </div>
+            <button type="submit" class="btn-primary">Guardar en GitHub</button>
+        </form>
+
+        <h3>Solicitudes Registradas</h3>
+        <table id="tabla-admin">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tarea</th>
+                    <th>Inicio Tarea</th>
+                    <th>Requerimiento</th>
+                    <th>Fecha Solicitud (-14d)</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- TAB 2: GERENCIA -->
+    <div id="tab-gerencia" class="tab-content">
+        <h2>Aprobación de Requerimientos (Gerencia)</h2>
+        <table id="tabla-gerencia">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tarea</th>
+                    <th>Requerimiento</th>
+                    <th>Fecha Solicitud</th>
+                    <th>Fecha Aprobación</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- TAB 3: DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content">
+        <h2>Dashboard Consolidado</h2>
+        <table id="tabla-dashboard">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tarea</th>
+                    <th>Requerimiento</th>
+                    <th>F. Solicitud</th>
+                    <th>F. Aprobación</th>
+                    <th>F. Generación OC</th>
+                    <th>N° OC</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="debug-panel"></div>
+
+    <script>
+        const GITHUB_REPO = "aov-avita/slctd";
+        const GITHUB_FILE = "solicitudes.json";
+        
+        let GITHUB_TOKEN = localStorage.getItem("segma_github_token") || "";
+        let datosDB = { proyecto: "Edificio SEGMA", solicitudes: [] };
+        let fileSHA = "";
+
+        function logDebug(msg) {
+            const panel = document.getElementById('debug-panel');
+            panel.style.display = 'block';
+            panel.innerHTML = `> ${msg}`;
+        }
+
+        function cambiarTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            const btnIndex = tabName === 'admin' ? 0 : tabName === 'gerencia' ? 1 : 2;
+            document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
+        }
+
+        function calcularFechaSuministro() {
+            const val = document.getElementById('tarea-fecha').value;
+            if (val) {
+                const fecha = new Date(val);
+                fecha.setDate(fecha.getDate() - 14);
+                document.getElementById('suministro-fecha').value = fecha.toISOString().split('T')[0];
+            }
+        }
+
+        function pedirNuevoToken() {
+            document.getElementById('input-token').value = GITHUB_TOKEN;
+            document.getElementById('modal-token').style.display = 'flex';
+        }
+
+        function guardarToken() {
+            const val = document.getElementById('input-token').value.trim();
+            if (val) {
+                GITHUB_TOKEN = val;
+                localStorage.setItem("segma_github_token", GITHUB_TOKEN);
+                document.getElementById('modal-token').style.display = 'none';
+                cargarDesdeGitHub();
+            } else {
+                alert("Ingresa un Token válido.");
+            }
+        }
+
+        async function cargarDesdeGitHub() {
+            document.getElementById('status-sync').innerText = "Cargando...";
+            
+            if (!GITHUB_TOKEN) {
+                document.getElementById('modal-token').style.display = 'flex';
+                document.getElementById('status-sync').innerText = "Falta Token";
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}?t=${Date.now()}`, {
+                    headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Error ${res.status}: No se pudo leer el archivo solicitudes.json`);
+                }
+
+                const data = await res.json();
+                fileSHA = data.sha;
+                
+                const bytes = Uint8Array.from(atob(data.content.replace(/\s/g, '')), c => c.charCodeAt(0));
+                const jsonText = new TextDecoder().decode(bytes);
+                datosDB = JSON.parse(jsonText);
+                
+                document.getElementById('status-sync').innerText = "Sincronizado";
+                logDebug("Datos cargados correctamente desde GitHub.");
+                renderTables();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('status-sync').innerText = "Error Conexión";
+                logDebug(e.message);
+            }
+        }
+
+        async function guardarEnGitHub(mensajeCommit) {
+            document.getElementById('status-sync').innerText = "Guardando...";
+            datosDB.ultimaActualizacion = new Date().toISOString().split('T')[0];
+
+            const jsonString = JSON.stringify(datosDB, null, 2);
+            const bytes = new TextEncoder().encode(jsonString);
+            const base64Content = btoa(String.fromCharCode(...bytes));
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: mensajeCommit,
+                        content: base64Content,
+                        sha: fileSHA
+                    })
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Error ${res.status} al guardar en GitHub.`);
+                }
+
+                const data = await res.json();
+                fileSHA = data.content.sha;
+                document.getElementById('status-sync').innerText = "Guardado con éxito";
+                logDebug("Cambios guardados en el repositorio.");
+                renderTables();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('status-sync').innerText = "Error al Guardar";
+                logDebug(e.message);
+                alert("No se pudo guardar. Verifica que tu Token tenga permisos de escritura ('repo').");
+            }
+        }
+
+        document.getElementById('form-tarea').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const nuevaSol = {
+                id: Math.floor(100 + Math.random() * 900),
+                tarea: document.getElementById('tarea-nombre').value,
+                fechaInicio: document.getElementById('tarea-fecha').value,
+                requerimientos: [{
+                    tipo: document.getElementById('suministro-tipo').value,
+                    descripcion: document.getElementById('suministro-nombre').value,
+                    fechaSolicitud: document.getElementById('suministro-fecha').value,
+                    fechaAprobacion: "-",
+                    fechaOC: "-",
+                    estado: "PENDIENTE",
+                    oc: "-"
+                }],
+                registradoPor: "Administrador de Proyecto"
+            };
+
+            if (!datosDB.solicitudes) datosDB.solicitudes = [];
+            datosDB.solicitudes.push(nuevaSol);
+            
+            await guardarEnGitHub(`Agregar tarea: ${nuevaSol.tarea}`);
+            this.reset();
+        });
+
+        async function cambiarEstado(solicitudId, reqIdx, nuevoEstado) {
+            const sol = datosDB.solicitudes.find(s => s.id === solicitudId);
+            if (sol && sol.requerimientos[reqIdx]) {
+                const hoy = new Date().toISOString().split('T')[0];
+                sol.requerimientos[reqIdx].estado = nuevoEstado;
+                
+                if (nuevoEstado === 'APROBADO') {
+                    sol.requerimientos[reqIdx].fechaAprobacion = hoy;
+                    sol.requerimientos[reqIdx].fechaOC = hoy;
+                    sol.requerimientos[reqIdx].oc = `OC-SEGMA-${Math.floor(1000 + Math.random() * 9000)}`;
+                } else {
+                    sol.requerimientos[reqIdx].fechaAprobacion = hoy;
+                    sol.requerimientos[reqIdx].fechaOC = "-";
+                    sol.requerimientos[reqIdx].oc = "-";
+                }
+                
+                await guardarEnGitHub(`Cambio estado a ${nuevoEstado} en solicitud #${solicitudId}`);
+            }
+        }
+
+        function renderTables() {
+            const getBadge = (e) => {
+                if (e === 'PENDIENTE') return `<span class="badge badge-pending">Pendiente</span>`;
+                if (e === 'APROBADO') return `<span class="badge badge-approved">Aprobado</span>`;
+                return `<span class="badge badge-rejected">${e}</span>`;
+            };
+
+            let htmlAdmin = "", htmlGerencia = "", htmlDashboard = "";
+
+            if (datosDB && datosDB.solicitudes) {
+                datosDB.solicitudes.forEach(s => {
+                    s.requerimientos.forEach((r, idx) => {
+                        htmlAdmin += `<tr>
+                            <td>#${s.id}</td>
+                            <td><b>${s.tarea}</b></td>
+                            <td>${s.fechaInicio}</td>
+                            <td>[${r.tipo}] ${r.descripcion}</td>
+                            <td><b style="color:var(--danger);">${r.fechaSolicitud}</b></td>
+                            <td>${getBadge(r.estado)}</td>
+                        </tr>`;
+
+                        htmlGerencia += `<tr>
+                            <td>#${s.id}</td>
+                            <td><b>${s.tarea}</b></td>
+                            <td>[${r.tipo}] ${r.descripcion}</td>
+                            <td>${r.fechaSolicitud}</td>
+                            <td>${r.fechaAprobacion || '-'}</td>
+                            <td>${getBadge(r.estado)}</td>
+                            <td>
+                                ${r.estado === 'PENDIENTE' ? `
+                                    <button type="button" class="btn-action btn-approve" onclick="cambiarEstado(${s.id},${idx}, 'APROBADO')">Aprobar</button>
+                                    <button type="button" class="btn-action btn-reject" onclick="cambiarEstado(${s.id},${idx}, 'RECHAZADO')">Rechazar</button>
+                                ` : '<i>Procesado</i>'}
+                            </td>
+                        </tr>`;
+
+                        htmlDashboard += `<tr>
+                            <td>#${s.id}</td>
+                            <td><b>${s.tarea}</b></td>
+                            <td>[${r.tipo}] ${r.descripcion}</td>
+                            <td>${r.fechaSolicitud}</td>
+                            <td>${r.fechaAprobacion || '-'}</td>
+                            <td>${r.fechaOC || '-'}</td>
+                            <td><code>${r.oc}</code></td>
+                            <td>${getBadge(r.estado)}</td>
+                        </tr>`;
+                    });
+                });
+            }
+
+            document.querySelector('#tabla-admin tbody').innerHTML = htmlAdmin;
+            document.querySelector('#tabla-gerencia tbody').innerHTML = htmlGerencia;
+            document.querySelector('#tabla-dashboard tbody').innerHTML = htmlDashboard;
+        }
+
+        window.addEventListener('DOMContentLoaded', cargarDesdeGitHub);
+    </script>
+</body>
+</html>
