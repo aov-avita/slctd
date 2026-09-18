@@ -3,28 +3,6 @@
   "ultimaActualizacion": "2026-09-18",
   "solicitudes": [
     {
-      "id": 101,
-      "tarea": "Hormigón de fundaciones zona 1",
-      "fechaInicio": "2026-10-01",
-      "requerimientos": [
-        {
-          "tipo": "Suministro",
-          "descripcion": "Hormigón H30",
-          "fechaSolicitud": "2026-09-17",
-          "estado": "PENDIENTE",
-          "oc": "-"
-        },
-        {
-          "tipo": "Personal",
-          "descripcion": "Ingreso de personal (6 trabajadores)",
-          "fechaSolicitud": "2026-09-17",
-          "estado": "PENDIENTE",
-          "oc": "-"
-        }
-      ],
-      "registradoPor": "Administrador de Proyecto"
-    },
-    {
       "id": 156,
       "tarea": "Hgon fundaciones ",
       "fechaInicio": "2026-09-24",
