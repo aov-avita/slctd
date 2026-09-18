@@ -11,9 +11,9 @@
           "tipo": "Suministro",
           "descripcion": "G20-10",
           "fechaSolicitud": "2026-09-10",
-          "fechaAprobacion": "-",
+          "fechaAprobacion": "2026-09-18",
           "fechaOC": "-",
-          "estado": "PENDIENTE",
+          "estado": "APROBADO",
           "oc": "-"
         }
       ],
